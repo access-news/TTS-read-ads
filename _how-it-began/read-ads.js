@@ -11,6 +11,7 @@ const json = await res.json();
 // console.log(json);
 
 const util = {};
+
 // https://betterprogramming.pub/compose-and-pipe-in-javascript-medium-d1e1b2b21f83
 util.pipe =
   function(...functions) {

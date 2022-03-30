@@ -1,0 +1,37 @@
+let s:so_save = &g:so | let s:siso_save = &g:siso | setg so=0 siso=0 | setl so=-1 siso=-1
+argglobal
+if bufexists("~/shed/deno/TTS-read-ads/read-ads.js") | buffer ~/shed/deno/TTS-read-ads/read-ads.js | else | edit ~/shed/deno/TTS-read-ads/read-ads.js | endif
+setlocal fdm=manual
+setlocal fde=\\\ v:lnum\ >=\ line(\"$\")\ ||\ v:lnum\ ==\ 0\ \ ?\ \"0\"\ \ :\\\ indent(v:lnum+1)\ >\ indent(v:lnum)\ \ \ ?\ \"a1\"\ :\\\ indent(v:lnum+1)\ <\ indent(v:lnum)\ \ \ ?\ \"s1\"\ :\\\ indent(v:lnum)\ ==\ 0\ ?\ \"0\"\ :\ \"=\"\\
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+silent! normal! zE
+26,50fold
+18,50fold
+17,50fold
+53,92fold
+94,127fold
+128,146fold
+150,187fold
+148,187fold
+190,193fold
+189,193fold
+201,205fold
+207,218fold
+233,250fold
+252,262fold
+264,299fold
+let &fdl = &fdl
+let s:l = 94 - ((86 * winheight(0) + 25) / 51)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 94
+normal! 0
+let &g:so = s:so_save | let &g:siso = s:siso_save
+doautoall SessionLoadPost
+" vim: set ft=vim :
