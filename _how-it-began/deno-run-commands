@@ -1,0 +1,7 @@
+deno run --allow-env --allow-net read-ads.js 'https://dam.flippenterprise.net/flyerkit/publication/4638078/products?display_type=all&locale=en&access_token=7749fa974b9869e8f57606ac9477decf'
+deno run --allow-net=dam.flippenterprise.net read-ads.js 'https://dam.flippenterprise.net/flyerkit/publication/4603927/products?display_type=all&locale=en&access_token=7749fa974b9869e8f57606ac9477decf' 
+deno run --allow-net=dam.flippenterprise.net read-ads.js 'https://dam.flippenterprise.net/flyerkit/publication/4603927/products?display_type=all&locale=en&access_token=7749fa974b9869e8f57606ac9477decf' | less
+deno run --allow-net=dam.flippenterprise.net read-ads.js 'https://dam.flippenterprise.net/flyerkit/publication/4638078/products?display_type=all&locale=en&access_token=7749fa974b9869e8f57606ac9477decf'
+deno run --allow-net=dam.flippenterprise.net read-ads.js https://dam.flippenterprise.net/flyerkit/publication/4638078/products?display_type=all&locale=en&access_token=7749fa974b9869e8f57606ac9477decf 
+deno run --allow-net read-ads.js 'https://dam.flippenterprise.net/flyerkit/publication/4638078/products?display_type=all&locale=en&access_token=7749fa974b9869e8f57606ac9477decf'
+deno run --allow-write --allow-env --allow-net read-ads.js 'https://dam.flippenterprise.net/flyerkit/publication/4638078/products?display_type=all&locale=en&access_token=7749fa974b9869e8f57606ac9477decf'
