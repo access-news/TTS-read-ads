@@ -32,8 +32,8 @@ defmodule Ads do
   end
 
   def request(conn, path, headers) do
-    {:ok, conn, _req_ref} = Mint.HTTP.request(conn, "GET", path, headers, "")
-    conn
+    Mint.HTTP.request(conn, "GET", path, headers, "")
+    # -> {:ok, conn, request_ref} where `request_ref` identifies responses in the output of `Mint.HTTP.stream/2` 
   end
 
   def safeway_parse_publication_list(jsonRaw) do
@@ -49,17 +49,35 @@ defmodule Ads do
       #   conn
 
       message ->
+        IO.puts("\n")
+        IO.puts("=== ENTER =================================================")
         IO.inspect(message, label: :message)
+        IO.puts("\n")
+
         case Mint.HTTP.stream(conn, message) do
-          {:ok, conn, resp} = mintStream ->
+          {:ok, conn, responses} = mintStream ->
+            IO.puts("\n")
+            IO.puts("=== :ok MINT STREAM =======================================")
+            IO.inspect(mintStream, label: :mintStream)
+            IO.puts("\n")
             # IO.inspect(conn, label: :conn)
-            # IO.inspect(resp, label: :resp)
-            case Enum.filter(resp, &(elem(&1,0) === :data)) do
+            # IO.inspect(responses, label: :responses)
+            case Enum.filter(responses, &(elem(&1,0) === :data)) do
               [] ->
-                IO.inspect(mintStream, label: :bummer)
+                IO.puts("\n")
+                IO.puts("=== BUMMBER [] ============================================")
+                IO.inspect(mintStream, label: :mintStream)
+                IO.puts("\n")
                 f(conn)
               [{:data, _ref, zippedJSON} | _] = flyerData ->
-
+                IO.puts("\n")
+                IO.puts("=== :data BRANCH ==========================================")
+                IO.inspect(mintStream, label: :mintStream)
+                IO.puts("   ========================================================")
+                IO.puts("length(flyerData): #{length(flyerData)}")
+                IO.puts("   ========================================================")
+                IO.inspect(flyerData, label: :flyerData)
+                IO.puts("\n")
                 # 1. the actual flyer is loooong so recursively check
                 #    for ":done" (right? Not sure what it is supposed
                 #    to look like; check Mint.request/5 docs.)
@@ -71,14 +89,23 @@ defmodule Ads do
                 {conn, jsonRaw}
             end
 
-          other ->
-            IO.inspect(other, label: :other)
-            conn
+          {:error, conn, reason, responses} ->
+            IO.puts("\n")
+            IO.puts("=== :error MINT STREAM ====================================")
+            IO.inspect(other, label: :error)
+            IO.puts("\n")
+            f(conn)
+
+          :unknown ->
+            IO.puts("\n")
+            IO.puts("=== :unknown MINT STREAM ==================================")
+            IO.puts("\n")
+            f(conn)
         end
     after
       0 ->
-        IO.puts("after")
-        conn
+        IO.puts("=== after BRANCH ==========================================")
+        {:no_data, conn}
     end
   end
 end
