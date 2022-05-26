@@ -1,42 +1,60 @@
 defmodule Ads do
+  use GenServer
+
   @moduledoc """
   Documentation for `Ads`.
   """
 
-  def safeway_connect do
-    connect("dam.flippenterprise.net")
+  def init(_) do
+    {:ok, []}
   end
 
-  def safeway_flipp_access_token do
-    "7749fa974b9869e8f57606ac9477decf"
-  end
+  # def safeway_connect do
+  #   connect("dam.flippenterprise.net")
+  # end
 
-  def safeway_headers do
-    [{"accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"}, {"accept-encoding", "gzip, deflate, br"}, {"accept-language", "en-US,en;q=0.9,hu;q=0.8"}, {"cache-control", "no-cache"}, {"cookie", "_flyers_session=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaDdCMGtpRDNObGMzTnBiMjVmYVdRR09nWkZWRWtpSlRZeU5URTRNRGd6WTJNek9UZ3dOemM0TURobE5UWmhNemMyTkdSalpHWmtCanNBVkVraURYUmxjM1JmZG1GeUJqc0FSa2tpQm1ZR093QlUiLCJleHAiOiIyMDIyLTA4LTA1VDIxOjE5OjI2LjExMFoiLCJwdXIiOm51bGx9fQ%3D%3D--7d4183d3ddee74ad72b80114982d5dd8a3187ee5"}, {"pragma", "no-cache"}, {"sec-ch-ua", "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"101\", \"Google Chrome\";v=\"101\""}, {"sec-ch-ua-mobile", "?0"}, {"sec-ch-ua-platform", "\"Linux\""}, {"sec-fetch-dest", "document"}, {"sec-fetch-mode", "navigate"}, {"sec-fetch-site", "none"}, {"sec-fetch-user", "?1"}, {"upgrade-insecure-requests", "1"}, {"user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.41 Safari/537.36"}]
-  end
+  # def safeway_flipp_access_token do
+  #   "7749fa974b9869e8f57606ac9477decf"
+  # end
 
-  def safeway_publication_list(conn) do
-    path = "/flyerkit/publications/safeway?locale=en&access_token=#{safeway_flipp_access_token()}&store_code=654"
-    request(conn, path, safeway_headers())
-  end
+  # def safeway_headers do
+  #   [{"accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"}, {"accept-encoding", "gzip, deflate, br"}, {"accept-language", "en-US,en;q=0.9,hu;q=0.8"}, {"cache-control", "no-cache"}, {"cookie", "_flyers_session=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaDdCMGtpRDNObGMzTnBiMjVmYVdRR09nWkZWRWtpSlRZeU5URTRNRGd6WTJNek9UZ3dOemM0TURobE5UWmhNemMyTkdSalpHWmtCanNBVkVraURYUmxjM1JmZG1GeUJqc0FSa2tpQm1ZR093QlUiLCJleHAiOiIyMDIyLTA4LTA1VDIxOjE5OjI2LjExMFoiLCJwdXIiOm51bGx9fQ%3D%3D--7d4183d3ddee74ad72b80114982d5dd8a3187ee5"}, {"pragma", "no-cache"}, {"sec-ch-ua", "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"101\", \"Google Chrome\";v=\"101\""}, {"sec-ch-ua-mobile", "?0"}, {"sec-ch-ua-platform", "\"Linux\""}, {"sec-fetch-dest", "document"}, {"sec-fetch-mode", "navigate"}, {"sec-fetch-site", "none"}, {"sec-fetch-user", "?1"}, {"upgrade-insecure-requests", "1"}, {"user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.41 Safari/537.36"}]
+  # end
 
   # Usually either the weekly flyer or big book of savings
-  def safeway_publication(conn, id) do
-    path = "/flyerkit/publication/#{id}/products?display_type=all&locale=en&access_token=#{safeway_flipp_access_token()}"
-    request(conn, path, safeway_headers())
-  end
+  # def safeway_publication(conn, id) do
+  #   path = "/flyerkit/publication/#{id}/products?display_type=all&locale=en&access_token=#{safeway_flipp_access_token()}"
+  #   request(conn, path, safeway_headers())
+  # end
+
+  # def safeway_publication_list(conn) do
+  #   path = "/flyerkit/publications/safeway?locale=en&access_token=#{safeway_flipp_access_token()}&store_code=654"
+  #   request(conn, path, safeway_headers())
+  # end
+
+  # TODO 2022_05_24T1809
+  # Re-write `connect/1` and `request/3` with `case` to log errors instead having them blow up immediately on errors
 
   def connect(domain) do
-    {:ok, conn} = Mint.HTTP.connect(:https, domain, 443 )
-    conn
+    Mint.HTTP.connect(:https, domain, 443 )
+    # -> {:error, Mint.Types.error()}
+    # -> {:ok, conn}
   end
 
   def request(conn, path, headers) do
-    Mint.HTTP.request(conn, "GET", path, headers, "")
+
+    Mint.HTTP.request(
+      conn,    # conn
+      "GET",   # method
+      path,    # path
+      headers, # headers
+      ""       # body
+    )
+
     # -> {:error, conn, reason}
     # -> {:ok, conn, request_ref}
     #
-    #    where `request_ref` identifies responses returned by
+    #    Above `request_ref` identifies responses returned by
     #    `Mint.HTTP.stream/2`  (i.e., after  the request  has
     #    been issued, messages from the request's destination
     #    will come into  the mailbox of the calling - in this
@@ -44,33 +62,29 @@ defmodule Ads do
     #    of `stream/2`)
   end
 
-  # `json` here is usually a list because Safeway has 2 active publications at any given time: the weekly ads and Big Book of Savings. With that said, this will crash if this is not caseand the input JSON is not a list.
-  def safeway_parse_publication_list(json) do
-    Enum.map(json, &(Map.get(&1, "id")))
+  def fetch_json(domain, path, headers) when is_binary(domain) do
+    {:ok, conn} = connect(domain)
+    fetch_json(conn, path, headers)
   end
 
-  def safeway_get_publications(conn) do
-    {:ok, conn, request_ref} =
-      conn
-      |> safeway_connect()
-      |> safeway_publication_list()
-
-    {conn, aggregatedResponses} = Ads.collect_responses(conn)
-
-    publication_list_ids =
-      aggregatedResponses
-      |> stream_data_by_request_to_json(request_ref)
-      |> safeway_parse_publication_list()
-      |> Enum.map(&(safeway_publication(conn, &1)))
-    NOT DONE!
+  def fetch_json(conn, path, headers) when is_struct(conn) do
+    with \
+      {:ok, conn, request_ref} = request(conn, path, headers),
+      {conn, responses}        = collect_responses(conn),
+      json = mint_stream_data_by_request_to_json(responses, request_ref)
+    do
+      {conn, json}
+    end
   end
+
 
   def collect_responses(conn) do
     collect_responses(conn, [])
   end
 
   # This will always empty the the process' message box. (TODO Make sure)
-  def collect_responses(conn, aggregatedResponses) do
+  # TODO 2022_05_21T2133 For some reason, sometimes (always?) this function only returns [] on first call and 
+  def collect_responses(conn, responses) do
 
       # For HTTPS,  `message` usually has the  below format,
       # but not  important at this  point as it  is entirely
@@ -107,33 +121,33 @@ defmodule Ads do
             IO.puts("\n")
             IO.puts("=== :unknown MINT STREAM ==================================")
             IO.puts("\n")
-            collect_responses(conn, aggregatedResponses)
+            collect_responses(conn, responses)
 
           {:error, conn, mintError, responsesList} ->
             IO.puts("\n")
             IO.puts("=== :error MINT STREAM ====================================")
             IO.inspect(mintError, label: :error)
             IO.puts("\n")
-            collect_responses(conn, aggregatedResponses ++ responsesList)
+            collect_responses(conn, responses ++ responsesList)
 
           {:ok, conn, responsesList} = mintStream ->
             IO.puts("\n")
             IO.puts("=== :ok MINT STREAM =======================================")
             IO.inspect(mintStream, label: :mintStream)
             IO.puts("\n")
-            collect_responses(conn, aggregatedResponses ++ responsesList)
+            collect_responses(conn, responses ++ responsesList)
         end
     after
-      0 ->
+      250 ->
         # No messages at all or finished aggregating all the responses
         IO.puts("=== after BRANCH ==========================================")
-        {conn, aggregatedResponses}
+        {conn, responses}
     end
   end
 
-  def stream_data_by_request_to_json(aggregatedResponses, request_ref) do
+  def mint_stream_data_by_request_to_json(responses, request_ref) do
 
-    # Responses in `aggregatedResponses` have the following
+    # Responses in `responses` have the following
     # form (from the `Mint.HTTP.stream/2` docs):
     #
     # + {:status,       request_ref, status_code                  }
@@ -146,13 +160,13 @@ defmodule Ads do
     #
 
     IO.puts("\n")
-    IO.inspect(aggregatedResponses, label: :all_responses)
+    IO.inspect(responses, label: :all_responses)
     IO.puts("\n")
 
     # We only care about the `:data` right now:
 
     dataResponses =
-      aggregatedResponses
+      responses
       |> Enum.filter(&(elem(&1,0) === :data))
       |> Enum.filter(&(elem(&1,1) === request_ref))
 
