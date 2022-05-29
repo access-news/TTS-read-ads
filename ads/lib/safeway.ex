@@ -32,29 +32,43 @@ defmodule Ads.Safeway do
         headers
       )
 
-    publication_ids =
-      extract_publication_ids(publication_list_json)
+    publications =
+      extract_and_remap_keys(publication_list_json)
+      # =>
+      # [
+      #   %{"external_display_name" => "Weekly Ad", "id" => 4904491},
+      #   %{"external_display_name" => "Big Book of Savings", "id" => 4861127}
+      # ]
 
     Enum.reduce(
-      publication_ids,
+      publications,
       { conn, [] },
       &fetch_publication/2
     )
   end
 
-  defp fetch_publication(id, { conn, json_list }) do
+  defp fetch_publication(publication, { conn, out_list }) do
 
-    path    = data().url_path_fns.publication.(id)
-    headers = data().flipp_HTTP_headers
+    path =
+      publication.id
+      |> data().url_path_fns.publication.()
 
-    { conn, publication_json } =
+    headers =
+      data().flipp_HTTP_headers
+
+    { conn, publication_item_maplist } =
       Ads.fetch_json(
         conn,
         path,
         headers
       )
 
-    { conn, [publication_json | json_list] }
+    { conn \
+    , [
+        Map.put_new(publication, :items, publication_item_maplist)
+      | out_list
+      ]
+    }
   end
 
   # TODO 2022_05_23T1245
@@ -82,7 +96,42 @@ defmodule Ads.Safeway do
   end
 
   # `json` here is usually a list because Safeway has 2 active publications at any given time: the weekly ads and Big Book of Savings. With that said, this will crash if this is not caseand the input JSON is not a list.
-  defp extract_publication_ids(publication_list_json) do
-    Enum.map(publication_list_json, &(Map.get(&1, "id")))
+  defp extract_and_remap_keys(publication_list_json) do
+
+    keys_needed =
+      [ "id"                    \
+      , "external_display_name" \
+      , "total_pages"           \
+      , "valid_from"            \
+      , "valid_to"
+      ]
+
+    publication_list_json
+    |> Enum.map(
+         &Map.take(&1, keys_needed)
+       )
+    # The  flipp-given JSON  keys may  change, so  if they
+    # do,  they  only need  to  be  changed here  and  not
+    # 27  times down  the  line  (e.g., "key_message"  and
+    # "key_message_short" hold  exactly the same  value as
+    # "external_display_name"so not sure  which one is the
+    # canonical key to hold the name of the publication)
+    #
+    # Also, the keys are now atoms and not strings
+    |> Enum.map(
+         fn(map) ->
+           %{ publication_id: map["id"]                      \
+            , publication_name: map["external_display_name"] \
+            , page_total: map["total_pages"]                 \
+            , valid_from: map["valid_from"]                  \
+            , valid_to:   map["valid_to"]
+            }
+         end
+       )
   end
+  # =>
+  # [
+  #   %{"external_display_name" => "Weekly Ad", "id" => 4904491},
+  #   %{"external_display_name" => "Big Book of Savings", "id" => 4861127}
+  # ]
 end

@@ -1,6 +1,7 @@
 -module(pub_guide).
 -export(
    [ print/0
+   , print/1
    , test_guide/0
    ]
 ).
@@ -11,6 +12,16 @@ print() ->
       }
     ] = test_guide()
 ,   do_print(MainCategories, [], 0, "")
+.
+
+print
+(
+    [ { { category, "Main menu" }
+        , MainCategories
+      }
+    ]
+) ->
+    do_print(MainCategories, [], 0, "")
 .
 
 do_print([], _CounterList, _CurrentCounter, _Pad) ->
