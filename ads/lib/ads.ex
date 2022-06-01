@@ -100,13 +100,14 @@ defmodule Ads do
 
     receive do
       message ->
-        IO.puts("\n")
-        IO.puts("=== MESSAGE ===============================================")
-        IO.inspect(message, label: :message)
-        IO.puts("\n")
+        # IO.puts("\n")
+        # IO.puts("=== MESSAGE ===============================================")
+        # IO.inspect(message, label: :message)
+        # IO.puts("\n")
 
-        IO.puts("=== Mint.HTTP.stream/2 ====================================")
-        case (Mint.HTTP.stream(conn, message) |> tap(&IO.inspect/1)) do
+        # IO.puts("=== Mint.HTTP.stream/2 ====================================")
+        case Mint.HTTP.stream(conn, message) do
+        # case (Mint.HTTP.stream(conn, message) |> tap(&IO.inspect/1)) do
           # -> :unknown
           #    a message not from the connection's socket
           #
@@ -118,29 +119,32 @@ defmodule Ads do
           # -> {:ok, conn, responsesList}
 
           :unknown ->
-            IO.puts("\n")
-            IO.puts("=== :unknown MINT STREAM ==================================")
-            IO.puts("\n")
+            # IO.puts("\n")
+            # IO.puts("=== :unknown MINT STREAM ==================================")
+            # IO.puts("\n")
             collect_responses(conn, responses)
 
-          {:error, conn, mintError, responsesList} ->
-            IO.puts("\n")
-            IO.puts("=== :error MINT STREAM ====================================")
-            IO.inspect(mintError, label: :error)
-            IO.puts("\n")
-            collect_responses(conn, responses ++ responsesList)
+          {:error, conn, %mint_error_module{} = mint_error, responsesList} ->
+            # IO.puts("\n")
+            # IO.puts("=== :error MINT STREAM ====================================")
+            # IO.inspect(mintError, label: :error)
+            # IO.puts("\n")
+            # TODO 2022_05_31T2031 Look into Elixir exceptions
+            # Trying to raise the returned Mint error but it is either does not implement the Exception protocol (is there such a thing?) or I'm doing something wrong (which is for sure as I tried at least 5 different variations on `raise` below...
+            raise mint_error_module, message: Exception.message(mint_error) # BAD!
+            # collect_responses(conn, responses ++ responsesList)
 
           {:ok, conn, responsesList} = mintStream ->
-            IO.puts("\n")
-            IO.puts("=== :ok MINT STREAM =======================================")
-            IO.inspect(mintStream, label: :mintStream)
-            IO.puts("\n")
+            # IO.puts("\n")
+            # IO.puts("=== :ok MINT STREAM =======================================")
+            # IO.inspect(mintStream, label: :mintStream)
+            # IO.puts("\n")
             collect_responses(conn, responses ++ responsesList)
         end
     after
       250 ->
         # No messages at all or finished aggregating all the responses
-        IO.puts("=== after BRANCH ==========================================")
+        # IO.puts("=== after BRANCH ==========================================")
         {conn, responses}
     end
   end
@@ -159,9 +163,9 @@ defmodule Ads do
     # + {:push_promise, request_ref, promised_request_ref, headers} HTTP/2 only
     #
 
-    IO.puts("\n")
-    IO.inspect(responses, label: :all_responses)
-    IO.puts("\n")
+    # IO.puts("\n")
+    # IO.inspect(responses, label: :all_responses)
+    # IO.puts("\n")
 
     # We only care about the `:data` right now:
 
@@ -173,18 +177,18 @@ defmodule Ads do
     case dataResponses do
 
       [] ->
-        IO.puts("\n")
-        IO.puts("=== BUMMBER [] ============================================")
-        IO.puts("\n")
+        # IO.puts("\n")
+        # IO.puts("=== BUMMBER [] ============================================")
+        # IO.puts("\n")
         ""
 
       # The Safeway flyer's data is gzipped (see response headers) so they will need to be unzipped before use.
       # TODO Safeway uses Flipp, a couple other chains do too, but not sure about the rest.
       [{:data, ^request_ref, _zippedJSON} | _] = flyerData ->
 
-        IO.puts("\n")
-        IO.puts("=== :data BRANCH ==========================================")
-        IO.puts("\n")
+        # IO.puts("\n")
+        # IO.puts("=== :data BRANCH ==========================================")
+        # IO.puts("\n")
 
         flyerData
         |> Enum.reduce("", &(&2 <> elem(&1,2)))
