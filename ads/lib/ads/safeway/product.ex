@@ -12,6 +12,7 @@
           id
           name
           on_page
+          original_price
           post_price_text
           pre_price_text
           price_text
