@@ -18,11 +18,17 @@ defmodule Ads.MixProject do
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
+  @doc """
+  NOTE 2022_06_02T2239 TIMEX NEEDS REBAR3!
+  Keep this in mind when creating a shell.nix for this
+  project.  Right now  it  is  installed locally  into
+  /home with `mix deps.get`
+  """
   defp deps do
-    [ {:castore, "~> 0.1.17"},
-      {:mint, "~> 1.4"},
-      {:jason, "~> 1.3"}
+    [ {:castore, "~> 0.1.17"} \
+    , {:mint, "~> 1.4"}       \
+    , {:jason, "~> 1.3"}      \
+    , {:timex, "~> 3.0"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
