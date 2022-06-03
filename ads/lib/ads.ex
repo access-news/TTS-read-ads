@@ -67,6 +67,7 @@ defmodule Ads do
     fetch_json(conn, path, headers)
   end
 
+  # This clause may be pointless; see NOTE 2022_05_31T2036
   def fetch_json(conn, path, headers) when is_struct(conn) do
     with \
       {:ok, conn, request_ref} = request(conn, path, headers),

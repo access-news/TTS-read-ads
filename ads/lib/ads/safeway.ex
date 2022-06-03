@@ -1,23 +1,50 @@
 defmodule Ads.Safeway do
 
-  # TODO 2022-05-25T1810
-  # This started out as `GenServer` but left the `init/1` because this is basically initializing a connection to the Safeway ads URL and it may be useful when returning to a behaviour laer on.
-  # (WHY MOVE ON FROM GenServer? Because this is not really a process but sequential execution of code with a `receive` loop (i.e., get the Safeway flyers, then their contents, etc.). It seems more appropriate to write this as sequential code that could be made concurrent using `Task`s later (or even GenStage, Flow, Broadway if splitting to stages makes sense). If the store chain modules would all be `GenServer`s then those would have to started according to a schedule, and right now it seems easier to use `Task.async/3` with `:max_concurrency`.
+  @moduledoc """
+  TODO/QUESTION 2022-05-25T1810
+  This  started  out  as   `GenServer`  but  left  the
+  `init/1`  because this  is basically  initializing a
+  connection  to the  Safeway ads  URL and  it may  be
+  useful when returning to a behaviour laer on.
 
-  # QUESTION 2022-05-25T1817
-  # Would `GenServer`/`GenStage`&co. make sense later on when a common pattern has been identified and to start it as workers with specific args from a pool?
+  WHY MOVE ON FROM GenServer?
 
-  # ANSWER 2022-05-25T1849
-  # I remember now: this may need to be a process because `Mint.request/3` is async, and piping the returned `conn` struct into `Ads.collect_responses/1` may not yield anything: its `receive` loop immediately starts going through the process' message box, perhaps concluding with `[]` if the timeout in the `after` clause is not enough. With a `GenServer` this wouldn't be an issue as after `init/1`, when there are any incoming messages, `handle_info/?` will take over automatically, making sure that all the messages will be handled, always. (The timeout may still be an issue, because these `GenServer`s shouldn't be long running processes, but then what should be the timeout? -> Idiot, just terminate the process once done with the appropriate tuple...)
+  Because this is not  really a process but sequential
+  execution of  code with a `receive`  loop (i.e., get
+  the Safeway  flyers, then their contents,  etc.). It
+  seems more  appropriate to write this  as sequential
+  code  that could  be made  concurrent using  `Task`s
+  later (or even GenStage, Flow, Broadway if splitting
+  to stages  makes sense). If the  store chain modules
+  would  all be  `GenServer`s  then  those would  have
+  to  started  according  to  a  schedule,  and  right
+  now  it  seems  easier to  use  `Task.async/3`  with
+  `:max_concurrency`.
 
-  # def init(_) do
+  NOTE/QUESTION 2022-05-25T1817
+  Would `GenServer`/`GenStage`&co. make sense later on
+  when  a common  pattern has  been identified  and to
+  start it as workers with specific args from a pool?
 
-  #   # safeway_request =
-  #   data().domain
-  #   |> Ads.connect()
+  => ANSWER 2022-05-25T1849
+     I   remember   now:   this   may  need   to   be   a
+     process    because   `Mint.request/3`    is   async,
+     and   piping  the   returned   `conn`  struct   into
+     `Ads.collect_responses/1`  may  not yield  anything:
+     its `receive` loop  immediately starts going through
+     the  process' message  box, perhaps  concluding with
+     `[]`  if  the  timeout  in  the  `after`  clause  is
+     not  enough. With  a  `GenServer`  this wouldn't  be
+     an  issue  as after  `init/1`,  when  there are  any
+     incoming  messages, `handle_info/?`  will take  over
+     automatically,  making sure  that  all the  messages
+     will be  handled, always. (The timeout  may still be
+     an  issue, because  these `GenServer`s  shouldn't be
+     long running processes, but  then what should be the
+     timeout? ->  Idiot, just terminate the  process once
+     done with the appropriate tuple...)
 
-  #   # { :ok, safeway_request }
-  # end
+  """
 
   def get_flyers do
 
@@ -43,7 +70,6 @@ defmodule Ads.Safeway do
           fn(flyer, {conn, out_list}) ->
             flyer                         #=> %Flyer{ products: nil }
             |> fetch_flyer()          #=> flyer_product_list_jsons === [ %{} ]
-    |> Kernel.tap(&(IO.inspect(length(&1))))
             |> Enum.map(&(to_struct(&1)))        #=> [ %Product{} ]
             |> (&( %{flyer | products: &1} )).() #=> %Flyer{ products: [%.Product{} ] }
             |> (&(  {conn, [&1|out_list]}  )).()
@@ -52,13 +78,14 @@ defmodule Ads.Safeway do
     |> elem(1) #=> [ %.Flyer{} ]
   end
 
+  @doc """
+  NOTE 2022_05_31T2036 DITCHING `CONN`
+  The  second  flyer will  never  get  fetched as  the
+  connection gets closed so  falling back to opening a
+  new connection each time. Probably not understanding
+  something about HTTP(S) and/or Mint
+  """
   defp fetch_flyer(%__MODULE__.Flyer{} = flyer) do
-  # NOTE 2022_05_31T2036 Ditching `conn`
-  # The  second  flyer will  never  get  fetched as  the
-  # connection gets closed so  falling back to opening a
-  # new connection each time. Probably not understanding
-  # something about HTTP(S) and/or Mint
-  # defp fetch_flyer(%__MODULE__.Flyer{} = flyer, conn) do
 
     path =
       flyer.id
@@ -86,16 +113,26 @@ defmodule Ads.Safeway do
     # }
   end
 
-  # TODO 2022_05_23T1245
-  # 1. There are other chains that use flipp so this can be refactored further
-  # 2. This is configuration so figure out what would be the best way to store it (as config, it should definitely be an external input and not hard-coded here
+  @doc """
+  TODO 2022_05_23T1245 GENERALIZE
+  1. There are other chains that use flipp so this can be
+     refactored further
+  2. This is  configuration so  figure out what  would be
+     the  best way  to  store it  (as  config, it  should
+     definitely be  an external input and  not hard-coded
+     here
 
-  # TODO 2022_05_25T1936 SOLVED
-  # A recursive data structure (like in Nix) would be nice here to make the `flipp_access_token` template below less error prone (i.e., renaming the function will break the URL). What would be the best solution here? Elixir has a templating lib, look into it.
-  # SOLUTION:
-  # https://stackoverflow.com/questions/47281111/is-there-an-equivalent-to-module-for-named-functions-in-elixir-erlang
-  # https://stackoverflow.com/questions/36679379/elixir-call-method-on-module-by-string-name
-  # https://stackoverflow.com/questions/49360006/convert-module-name-to-string-and-back-to-module
+  TODO 2022_05_25T1936
+  A recursive  data structure  (like in Nix)  would be
+  nice here to  make the `flipp_access_token` template
+  below less error prone  (i.e., renaming the function
+  will break the URL). What would be the best solution
+  here? Elixir has a templating lib, look into it.
+  -> Some ideas:
+     https://stackoverflow.com/questions/47281111/is-there-an-equivalent-to-module-for-named-functions-in-elixir-erlang
+     https://stackoverflow.com/questions/36679379/elixir-call-method-on-module-by-string-name
+     https://stackoverflow.com/questions/49360006/convert-module-name-to-string-and-back-to-module
+  """
   def data do
     function_name = __ENV__.function |> elem(0)
     this_function = fn() -> apply(__MODULE__, function_name, []) end
@@ -110,7 +147,26 @@ defmodule Ads.Safeway do
     }
   end
 
-  # Of course, flipp might change up the JSON format
+  @doc """
+  NOTE 2022_05_30T1910 REASONS FOR USING STRUCTS
+  The  flipp-given JSON  keys may  change, so  if they
+  do,  they  only need  to  be  changed here  and  not
+  27  times down  the  line  (e.g., "key_message"  and
+  "key_message_short" hold  exactly the same  value as
+  "external_display_name"so not sure  which one is the
+  canonical key to hold the name of the flyer)
+  
+  Also, the keys are now atoms and not strings
+
+  TODO 2022_06_03T0745 HOW TO MAKE THIS MORE ROBUST?
+  flipp might change up the JSON format any time...
+
+  TODO 2022_06_03T0747 GENERALIZE
+  The clauses  look very similar  so if there  will be
+  more structs added, the  main structure could be put
+  in a helper function.
+  See also 2022_05_23T1245
+  """
   defp to_struct(%{ "flyer_type" => _, "total_pages" => _ } = flyer_json) do
 
     keys_needed =
@@ -129,20 +185,10 @@ defmodule Ads.Safeway do
            , products:   nil                                         \
            , name:       map["external_display_name"]                \
            , page_total: map["total_pages"]                          \
-           , valid_from: convert_flipp_datestring(map["valid_from"]) \
-           , valid_to:   convert_flipp_datestring(map["valid_to"])
+           , valid_from: Timex.parse!(map["valid_from"], "{ISO:Extended}") \
+           , valid_to:   Timex.parse!(map["valid_to"], "{ISO:Extended}")
          }
        end).()
-
-    # NOTE 2022_05_30T1910 REASONS FOR USING STRUCTS
-    # The  flipp-given JSON  keys may  change, so  if they
-    # do,  they  only need  to  be  changed here  and  not
-    # 27  times down  the  line  (e.g., "key_message"  and
-    # "key_message_short" hold  exactly the same  value as
-    # "external_display_name"so not sure  which one is the
-    # canonical key to hold the name of the flyer)
-    #
-    # Also, the keys are now atoms and not strings
   end
 
   defp to_struct(%{ "categories" => _, "page" => _ } = product_json) do
@@ -155,6 +201,7 @@ defmodule Ads.Safeway do
           dollars_off
           id
           name
+          original_price
           page
           post_price_text
           pre_price_text
@@ -175,13 +222,13 @@ defmodule Ads.Safeway do
     #   filtered  out, but  it  feels cleaner  to have  them
     #   processed here  as well  and have them  removed down
     #   the line.
+
     product_json
     |> Map.take(keys_needed)
     |> (fn(map) ->
         # IO.inspect(map)
          %__MODULE__.Product{
              category: map["categories"]                  \
-    # |> Kernel.tap(&(IO.inspect(&1))) \
                        |> Enum.reject(&(&1 === "Coupon")) \
                        |> List.first(nil)                 \
            , coupon: map["categories"]                    \
@@ -193,34 +240,48 @@ defmodule Ads.Safeway do
            , id:              map["id"]                   \
            , name:            map["name"]                 \
            , on_page:         map["page"]                 \
+           , original_price:  map["original_price"]       \
            , post_price_text: map["post_price_text"]      \
            , pre_price_text:  map["pre_price_text"]       \
            , price_text:      map["price_text"]           \
            , deal:            map["sale_story"]           \
          }
        end).()
-    # |> Kernel.tap(&(IO.inspect(&1)))
-
-    # NOTE 2022_05_30T1910 REASONS FOR USING STRUCTS
-    # The  flipp-given JSON  keys may  change, so  if they
-    # do,  they  only need  to  be  changed here  and  not
-    # 27  times down  the  line  (e.g., "key_message"  and
-    # "key_message_short" hold  exactly the same  value as
-    # "external_display_name"so not sure  which one is the
-    # canonical key to hold the name of the flyer)
-    #
-    # Also, the keys are now atoms and not strings
   end
 
-  defp convert_flipp_datestring(datestring) do
-    case DateTime.from_iso8601(datestring) do
-      # discarding offset as it is not important for now
-      # TODO 2022_05_29T1948
-      # How to add utc_offset to a converted DateTime term?
-      {:ok, datetime, _utc_offset} ->
-        datetime
-      {:error, error} ->
-        raise(Kernel.inspect(error))
-    end
+  @doc """
+  Translate  `Timex` date  to  human-readable form  of
+  `<weekday>, <month> <day>, <year>`, e.g., Wednesday,
+  June 7, 2022".
+
+  NOTE 2022_06_03T0722
+  Not dealing with ordinals for now as the whole point
+  of this exercise is to feed  it to a TTS engine, and
+  so far  both Google's and Azure's  solutions add the
+  ordinals automatically. Will worry  about it if this
+  needs to be printed somewhere.
+  """
+  defp to_human_date(timex_date) do
   end
+
+  # defp convert_flipp_datestring(datestring) do
+  #   IO.inspect(datestring)
+  #   case DateTime.from_iso8601(datestring) do
+  #     # discarding offset as it is not important for now
+  #     # TODO 2022_05_29T1948
+  #     # How to add utc_offset to a converted DateTime term?
+  #     {:ok, datetime, _utc_offset} ->
+  #       datetime
+  #     {:error, error} ->
+  #       raise(Kernel.inspect(error))
+  #   end
+  # end
+
+  # def to_string(%__MODULE__.Flyer{} = flyer) do
+  #   out_string = [ "Safeway's #{flyer.name}; valid from 
+  # end
+
+  # def to_string(%__MODULE__.Product{ coupon: true} = product) do
+  # # "#{p.name}; #{p.description}  #{p.pre_price_text} #{p.price_text} #{p.post_price_text} #{p.disclaimer}"
+  # end
 end
