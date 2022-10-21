@@ -264,19 +264,6 @@ defmodule Ads.Safeway do
   defp to_human_date(timex_date) do
   end
 
-  # defp convert_flipp_datestring(datestring) do
-  #   IO.inspect(datestring)
-  #   case DateTime.from_iso8601(datestring) do
-  #     # discarding offset as it is not important for now
-  #     # TODO 2022_05_29T1948
-  #     # How to add utc_offset to a converted DateTime term?
-  #     {:ok, datetime, _utc_offset} ->
-  #       datetime
-  #     {:error, error} ->
-  #       raise(Kernel.inspect(error))
-  #   end
-  # end
-
   # def to_string(%__MODULE__.Flyer{} = flyer) do
   #   out_string = [ "Safeway's #{flyer.name}; valid from 
   # end
