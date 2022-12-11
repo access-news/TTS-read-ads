@@ -110,13 +110,16 @@ See [this sample output](https://gist.github.com/toraritte/f83daceda83b06ffc3fe6
 
 > Request URL:
 >
->     https://api.target.com/weekly_ads/v1/store_promotions?key=9ba599525edd204c560a2182ae1cbfaa3eeddca5&store_id=<FOUR_DIGIT_STORE_ID>
+>     https://api.target.com/weekly_ads/v1/store_promotions?key=9ba599525edd204c560a2182ae1cbfaa3eeddca5&store_id=<LOCATION_ID>
 >
 > Request Method:
 >
 >     GET
 
-The `key` parameter seems to be set to a permanent value (thus far) so the only variable is the `FOUR_DIGIT_STORE_ID`.
+The `key` parameter seems to be set to a permanent value (thus far) so the only variable is the `LOCATION_ID`.
+
+> NOTE
+> `LOCATION_ID` is the unique store ID.
 
 Sample response:
 
