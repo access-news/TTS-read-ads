@@ -1,5 +1,7 @@
 # Notes on the Target API
 
+The `key` parameter in the API URLs below seems to be constant, but will keep an eye out.
+
 ## 1. Store locations
 
 ### 1.1 Find a store ID (i.e., `location_id`)
@@ -65,6 +67,12 @@ Interestingly, the city names do not matter; store 3306 is in Vermont, but if 10
 >
 >     GET
 
+---
+
+**Return value**: object
+
+---
+
 > NOTE
 > 1. `LOCATION_ID` is the unique store ID.
 > 2. The difference between the request URL above and in the next section (i.e., 1.3) is that the latter doesn't need the `LOCATION_ID`, only the query params.
@@ -92,19 +100,30 @@ See [this sample output](https://gist.github.com/toraritte/f83daceda83b06ffc3fe6
 > + `page`
 >
 >    If the `per_page` parameter is less than the total number of Target stores then the next `per_page` amount can be retrieved by incrementing the `page` number.
->
->    For example,
->
->        https://api.target.com/locations/v3/public/?key=9ba599525edd204c560a2182ae1cbfaa3eeddca5
->
->    will return the first 10 stores (sorted by `location_id`), and
->
->        https://api.target.com/locations/v3/public/?key=9ba599525edd204c560a2182ae1cbfaa3eeddca5&page=2
->
->    will return the next 10, and so on.
 
-> NOTE
-> There are ca. 2500 Target locations.
+> NOTE [`link` HTTP entity-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link) are returned with the responses, supporting [link types](https://developer.mozilla.org/en-US/docs/Web/HTML/Link_types) `prev`, `first`, `next`, `last`.
+
+---
+
+**Return value**: object
+
+---
+
+> NOTE There are ca. 2500 Target locations.
+
+**Examples**:
+
+    https://api.target.com/locations/v3/public/?key=9ba599525edd204c560a2182ae1cbfaa3eeddca5
+
+Will return the first 10 stores (sorted by `location_id`), and
+
+    https://api.target.com/locations/v3/public/?key=9ba599525edd204c560a2182ae1cbfaa3eeddca5&page=2
+
+will return the next 10.
+
+    https://api.target.com/locations/v3/public/?key=9ba599525edd204c560a2182ae1cbfaa3eeddca5&per_page=100&page=2
+
+Returns the stores 101-200 (again, sorted by `location_id`).
 
 ## 2. Available flyers
 
@@ -115,8 +134,6 @@ See [this sample output](https://gist.github.com/toraritte/f83daceda83b06ffc3fe6
 > Request Method:
 >
 >     GET
-
-The `key` parameter seems to be set to a permanent value (thus far) so the only variable is the `LOCATION_ID`.
 
 > NOTE
 > `LOCATION_ID` is the unique store ID.
@@ -161,5 +178,21 @@ Sample response:
             "promotion_type": "weeklyad"
         }
     ]
+
+## 3. Flyer data
+
+> **Request URL**:
+>
+>     https://api.target.com/weekly_ads/v1/promotions/<PROMOTION_ID>?key=9ba599525edd204c560a2182ae1cbfaa3eeddca5
+>
+> **Request Method**:
+>
+>     GET
+
+---
+
+**Return value**: object
+
+---
 
 vim: set tabstop=2 shiftwidth=2 expandtab:
