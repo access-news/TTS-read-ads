@@ -1,3 +1,5 @@
+See architecture decision records (ADR) in [`_adr`](./_adr) for design rationales.
+
 ## Current state of affairs (as of commit 5373e7e)
 
 This is how the repo looks like at the moment:
