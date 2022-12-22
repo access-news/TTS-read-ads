@@ -3,10 +3,9 @@
     date:   2022-12-21 13:11
     status: accepted
 
-TODO
-    date:   2022-12-21 12:42
+    date:   2022-12-22 10:31
     status: implemented
-    note: https://github.com/access-news/_/commit/667d3098cac55dc1340c79701cd4fe707bd986d3
+    note:   commit a543cb5
 
 ## Context
 
