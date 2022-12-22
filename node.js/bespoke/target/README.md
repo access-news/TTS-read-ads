@@ -1,14 +1,28 @@
-## Node.js notes
+## 1. Node.js notes
 
+### Step 0. Install NPM packages for this project (if needed)
 
+When in a new clone of this repo, do this first:
 
-## Notes on the Target API
+    npm install
+
+### Step 1. Edit [`index.js`](./index.jd)
+
+If this project is still in the early stages, the very end of [`index.js`](./index.jd) may not call the Azure Speech SDK but is set to output the parsed flyer text to `stdout`, so check this first.
+
+### Step 2. Run `node index.js`
+
+... but prepend it with the required environment variables first like this:
+
+    SPEECH_REGION="<azure_region>" SPEECH_KEY="<speech_service_key_from_azure_portal>" node index.js
+
+## 2. Notes on the Target API
 
 The `key` parameter in the API URLs below seems to be constant, but will keep an eye out.
 
-### 1. Store locations
+### 2.1 Store locations
 
-#### 1.1 Find a store ID (i.e., `location_id`)
+#### 2.1.1 Find a store ID (i.e., `location_id`)
 
 > **Request URL**:
 >
@@ -61,7 +75,7 @@ The store ID (`location_id`; see next sections) can be listed by parsing the HTM
 
 Interestingly, the city names do not matter; store 3306 is in Vermont, but if 1095 in `https://www.target.com/sl/minneapolis-ne/1095` is simply replaced by 3306, the Vermont store will come up.
 
-#### 1.2 Get info on a single store
+#### 2.1.2 Get info on a single store
 
 > **Request URL**:
 >
@@ -83,7 +97,7 @@ Interestingly, the city names do not matter; store 3306 is in Vermont, but if 10
 
 See [this sample output](https://gist.github.com/toraritte/f83daceda83b06ffc3fe6b36e13bd36a) for the Target in Sacramento, CA on Riverside Blvd. (`location_id` 310).
 
-#### 1.3 List store locations with all the public information
+#### 2.1.3 List store locations with all the public information
 
 > **Request URL**:
 >
@@ -129,7 +143,7 @@ will return the next 10.
 
 Returns the stores 101-200 (again, sorted by `location_id`).
 
-### 2. Available flyers
+### 2.2 Available flyers
 
 > Request URL:
 >
@@ -183,7 +197,7 @@ Sample response:
         }
     ]
 
-### 3. Flyer data
+### 2.3 Flyer data
 
 > **Request URL**:
 >
