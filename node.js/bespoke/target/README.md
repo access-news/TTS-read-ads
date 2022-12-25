@@ -1,16 +1,34 @@
 ## 1. Node.js notes
 
-### Step 0. Install NPM packages for this project (if needed)
+### Step 0. (Optional) Set global `node_modules`
+
+For example, when on NixOS, and one wants to just get this script running, use [this workaround](https://github.com/NixOS/nixpkgs/issues/3393#issuecomment-50330167):
+
+    npm config set prefix './mutable_node_modules'
+
+or
+
+    npm config set prefix '~/mutable_node_modules'
+
+> WARNING: As the linked comment above notes, this solution circumvents NixOS' purely functional model. If this is a concern for you, read this thread: [How to install npm packages in NixOS? (Unix & Linux Stackexchange)](https://unix.stackexchange.com/questions/379842/how-to-install-npm-packages-in-nixos).
+
+### Step 1. Install NPM packages for this project (if needed)
 
 When in a new clone of this repo, do this first:
 
     npm install
 
-### Step 1. Edit [`index.js`](./index.jd)
+### Step 2. Edit [`index.js`](./index.js)
 
-If this project is still in the early stages, the very end of [`index.js`](./index.jd) may not call the Azure Speech SDK but is set to output the parsed flyer text to `stdout`, so check this first.
+#### 2.1 Set the URL that points to the desired flyer
 
-### Step 2. Run `node index.js`
+Look for `const url`. See section [2. Notes on the Target API](#2-notes-on-the-target-api) below.
+
+#### 2.2 Set output stream (default: `console.log()` and **not** the Azure SDK)
+
+If this project is still in the early stages, the very end of [`index.js`](./index.js) may not call the Azure Speech SDK, but is set to output the parsed flyer text to `stdout`, so check this first.
+
+### Step 3. Run `node index.js`
 
 ... but prepend it with the required environment variables first like this:
 
