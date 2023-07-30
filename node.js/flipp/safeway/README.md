@@ -1,6 +1,6 @@
 # Safeway
 
-## 1. List available flyers (or "publications")
+## 1. List available flyers (or "publications") <!-- {{- -->
 
 The URL we use to list available flyers (which usually means the weekly flyer and the Big Book of Savings) is this:
 
@@ -14,7 +14,8 @@ Even though only `locale`, `access_token`, and `store_code` is needed:
 https://dam.flippenterprise.net/flyerkit/publications/safeway?locale=en&access_token=7749fa974b9869e8f57606ac9477decf&store_code=654
 ```
 
-The return value is a JSON array of "publication" objects:
+The return value is a JSON array of "publication" objects.
+For example: <!-- {{- -->
 
 ```
 > JSON.parse($0.textContent)
@@ -60,8 +61,10 @@ The return value is a JSON array of "publication" objects:
     length: 2
   ▶ [[Prototype]]: Array(0)
 ```
+  <!-- }}- -->
 
-## 2. List items in a flyer
+<!-- }}- -->
+## 2. List items in a flyer <!-- {{- -->
 
 The general template is
 
@@ -75,7 +78,7 @@ where `publication_id` is the `id` in the "publication" objects returned from in
 {"message":"Invalid publication_id or access_token","code":"422"}
 ```
 
-### 2.1 Examples
+### 2.1 Examples <!-- {{- -->
 
 To get the weekly flyer:
 
@@ -100,3 +103,7 @@ To check
     f.map(function(item) { return { "categories": item.categories.sort().join('|'), "disclaimer": item.disclaimer, "couponsArray": item.coupons }; })
 
 where `f` is the JSON from link 1. or 2. (i.e., URLs 1. and 2. have the exact same structure, and just wanted to give extra examples)
+  <!-- }}- -->
+<!-- }}- -->
+
+<!-- vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab: -->
