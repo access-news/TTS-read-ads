@@ -109,4 +109,4 @@ Where `product_ids` are comma-delimited list of product IDs (without space) that
 
   > NOTE: Only the J street store seems to be active (but then again, the store doesn't matter; only that we have the ID of a still active one for the API calls)
 
-vim: set tabstop=2 shiftwidth=2 expandtab:
+vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:

@@ -63,19 +63,19 @@ defmodule Ads.Safeway do
 
     # IO.inspect(flyer_jsons)
 
-    flyer_jsons
-    |> Enum.map(&to_struct/1) #=> [ %.Flyer{ products: nil } ]
-    |> Enum.reduce(
-          { conn, [] },
-          fn(flyer, {conn, out_list}) ->
-            flyer                         #=> %Flyer{ products: nil }
-            |> fetch_flyer()          #=> flyer_product_list_jsons === [ %{} ]
-            |> Enum.map(&(to_struct(&1)))        #=> [ %Product{} ]
-            |> (&( %{flyer | products: &1} )).() #=> %Flyer{ products: [%.Product{} ] }
-            |> (&(  {conn, [&1|out_list]}  )).()
-          end
-          )
-    |> elem(1) #=> [ %.Flyer{} ]
+    # flyer_jsons
+    # |> Enum.map(&to_struct/1) #=> [ %.Flyer{ products: nil } ]
+    # |> Enum.reduce(
+    #       { conn, [] },
+    #       fn(flyer, {conn, out_list}) ->
+    #         flyer                         #=> %Flyer{ products: nil }
+    #         |> fetch_flyer()          #=> flyer_product_list_jsons === [ %{} ]
+    #         |> Enum.map(&(to_struct(&1)))        #=> [ %Product{} ]
+    #         |> (&( %{flyer | products: &1} )).() #=> %Flyer{ products: [%.Product{} ] }
+    #         |> (&(  {conn, [&1|out_list]}  )).()
+    #       end
+    #       )
+    # |> elem(1) #=> [ %.Flyer{} ]
   end
 
   @doc """
@@ -155,7 +155,7 @@ defmodule Ads.Safeway do
   "key_message_short" hold  exactly the same  value as
   "external_display_name"so not sure  which one is the
   canonical key to hold the name of the flyer)
-  
+
   Also, the keys are now atoms and not strings
 
   TODO 2022_06_03T0745 HOW TO MAKE THIS MORE ROBUST?
@@ -265,10 +265,12 @@ defmodule Ads.Safeway do
   end
 
   # def to_string(%__MODULE__.Flyer{} = flyer) do
-  #   out_string = [ "Safeway's #{flyer.name}; valid from 
+  #   out_string = [ "Safeway's #{flyer.name}; valid from
   # end
 
   # def to_string(%__MODULE__.Product{ coupon: true} = product) do
   # # "#{p.name}; #{p.description}  #{p.pre_price_text} #{p.price_text} #{p.post_price_text} #{p.disclaimer}"
   # end
 end
+
+# vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:

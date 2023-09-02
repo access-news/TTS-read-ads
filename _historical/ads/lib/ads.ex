@@ -84,7 +84,7 @@ defmodule Ads do
   end
 
   # This will always empty the the process' message box. (TODO Make sure)
-  # TODO 2022_05_21T2133 For some reason, sometimes (always?) this function only returns [] on first call and 
+  # TODO 2022_05_21T2133 For some reason, sometimes (always?) this function only returns [] on first call and
   def collect_responses(conn, responses) do
 
       # For HTTPS,  `message` usually has the  below format,
@@ -220,3 +220,4 @@ end
 # :path: /flyerkit/publications/safeway?locale=en&access_token=7749fa974b9869e8f57606ac9477decf&store_code=654
 # :scheme: https
 
+# vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:
