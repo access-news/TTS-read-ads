@@ -148,7 +148,7 @@ flyer_sections = JSON.parse($0.textContent).filter( item => item.page_destinatio
 Why not simply use `flyer_sections`? Its keys are the page numbers already.
 > Because ordering in objects is not guaranteed by keys.
 */
-section_starts = Object.keys(pageCats).filter( e => e !== 'null').map( e => Number(e)).sort( (a,b) => a-b);
+section_starts = Object.keys(flyer_sections).filter( e => e !== 'null').map( e => Number(e)).sort( (a,b) => a-b);
 
 /* this is simply for debugging */
 products_per_page = JSON.parse($0.textContent).filter( item => item.page_destination === null && item.name !== 'Rite Aid' ).reduce( (acc, product) => { page = Number(product.page); if (acc[page]) { acc[page].push(product) } else { acc[page] = [ product ] }; return acc; }, []);
@@ -243,7 +243,7 @@ res = Object.keys(flyer_sections).map( key => flyer_sections[key]).map( section 
         replace(/^;\s+/, '').
         replaceAll('ct.', 'count').
         replaceAll('oz.', 'ounce').
-        replaceAll(/\s[Ee][Aa][.\s]?/g, ' each').
+        replaceAll(/EA/g, ' each').
         replaceAll(/[;\s]*with/g, ' with ').
         replaceAll(/;\s+OR/g, ' or ').
         replace(/\.\s*\.?$/, '').
@@ -257,7 +257,7 @@ res = Object.keys(flyer_sections).map( key => flyer_sections[key]).map( section 
         replaceAll(/Rewards;\s+or/g, 'Rewards, or'); */
 
 ; } } ).join('. ') + '. End of section. '
-).join('\n')
+) /*.join('\n') */
 
 /* `price_text` always the same as `current_price`, but using the former, because it is an empty string when none, but the latter is `null`. */
 ```
