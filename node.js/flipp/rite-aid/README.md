@@ -167,7 +167,7 @@ const null_to_string =  str => { if (str) { return str; } else { return ''; }};
 debug_res = Object.keys(flyer_sections).map( key => flyer_sections[key]).map( e => e.filter( i => i ).map( (product, i, _arr) => { if ( i === 0 ) { return product; } else { return pick(product, needed_product_keys) }}));
 
 
-res = Object.keys(flyer_sections).map( key => flyer_sections[key]).map( e => e.filter( i => i ).map( (product, i, _arr) => { if ( i === 0 ) { return product; } else {
+res = Object.keys(flyer_sections).map( key => flyer_sections[key]).map( section => section.filter( i => i ).map( (product, i, _arr) => { if ( i === 0 ) { return product; } else {
 
     p = product;
 
@@ -235,9 +235,19 @@ res = Object.keys(flyer_sections).map( key => flyer_sections[key]).map( e => e.f
     text = [ text, dis, sale ].join('; ');
     text = text + '. ';
 
-    return text.replaceAll('\n', '\\n').
+    return text. /*replaceAll('\n', '\\n'). */
+        replaceAll('\n', ' ').
+        replaceAll(/(;\s+)+/g, '; ').
+        replaceAll(/\.\s+;\s+\./g, '.').
+        replaceAll(/;\s+\./g, '.').
+        replace(/^;\s+/, '').
         replaceAll('ct.', 'count').
-        replaceAll('oz.', 'ounce')
+        replaceAll('oz.', 'ounce').
+        replaceAll(/\s[Ee][Aa][.\s]?/g, ' each').
+        replaceAll(/[;\s]*with/g, ' with ').
+        replaceAll(/;\s+OR/g, ' or ').
+        replace(/\.\s*\.?$/, '').
+        trim()
         ; /* text.
         replaceAll(',\n', ', ').
         replaceAll('\nOR', ' or').
@@ -246,7 +256,8 @@ res = Object.keys(flyer_sections).map( key => flyer_sections[key]).map( e => e.f
         replaceAll('; with', ' with').
         replaceAll(/Rewards;\s+or/g, 'Rewards, or'); */
 
-; } } ))
+; } } ).join('. ') + '. End of section. '
+).join('\n')
 
 /* `price_text` always the same as `current_price`, but using the former, because it is an empty string when none, but the latter is `null`. */
 ```
