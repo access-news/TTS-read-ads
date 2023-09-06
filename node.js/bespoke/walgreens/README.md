@@ -1,4 +1,74 @@
-## 1. Walgreens API
+## 0. Interim solution <!-- {{- -->
+
+The real solution (I think) lies in section "1. Walgreens API" below, but until I have time to properly explore it, here's an ad hoc one:
+
+1. Go to the [Walgreens weekly ad page](https://www.walgreens.com/offers/offers.jsp/weeklyad?view=weeklyad).
+
+2. The page is not loaded all at once, so scroll down to the bottom.
+
+   To check, go to the JavaScript console and call:
+
+   ```javascript
+   document.querySelector('#dwa_container > div.div-multipage-container')
+   ```
+
+   If the page is fully loaded, the only child elements without any children should be the `<div class="page-break"></div>` elements.
+
+3. To flatten the `div` soup, use this, that will list every item with titles in the right places, so the whole page can be processed like a list:
+
+   ```javascript
+   document.querySelectorAll('.card-container, .jq-circ-page-header')
+   ```
+
+---
+
+```javascript
+const pick = (obj, needed_keys) => needed_keys.filter(key => key in obj).reduce((obj2, key) => (obj2[key] = obj[key], obj2), {});
+
+items = Array.from(document.querySelectorAll('.card-container, .jq-circ-page-header, .onlyImage img'));
+
+reduced_items = r = items.map( htmlDivElement => ['ariaLabel', 'innerText', 'outerText', 'alt', 'classList', 'nodeName'].reduce( (acc, curr) => { acc[curr] = htmlDivElement[curr]; return acc; }, {}))
+
+r2 = r.map( i => {
+    if (i.ariaLabel) {
+        i.ariaLabel = i.ariaLabel.replace(/product /, '');
+        i.innerText = i.innerText.replace(i.ariaLabel, '').replaceAll(/\n+/g, '. ');
+    }; return i; })
+
+/* r3 = r2.map( i => i.ariaLabel + '. ' + i.innerText ) */
+
+let gogo = (reduced_item) => {
+    ri = reduced_item;
+
+    if (ri.classList.contains('card-container')) {
+        ri.ariaLabel = ri.ariaLabel.replace(/product /, '');
+        ri.innerText = ri.innerText.replace(ri.ariaLabel, '');
+        ri['proposed_text'] = (ri.ariaLabel + '. ' + ri.innerText).
+            replaceAll(/\n+/g, '. ').
+            replaceAll(/Shop now\.?/g, '').
+            replaceAll(/Shop products/g, '').
+            replaceAll(/[†Ω∞®‡»®*◊™]/g, '').
+            replaceAll(/(\d)\//g, "$1 for ").
+            replaceAll(/ct\./g, 'count').
+            replaceAll(/\.\s+with/g, ' with').
+            replaceAll(/\.\s+when/g, ' when').
+            replaceAll(/BOGO/g, 'Buy one get one');
+    } else if (ri.classList.contains('jq-circ-page-header')) {
+        ri['title'] = ri.innerText;
+    } else if (ri.nodeName === 'IMG') {
+        ri['title'] = ri.alt;
+    } else {
+        console.log(ri);
+    }
+
+    return ri;
+}
+
+r.map(gogo).map( i => {if (i.proposed_text) { return i.proposed_text } else { return i; }})
+```
+
+<!-- }}- -->
+## 1. Walgreens API <!-- {{- -->
 
 > WARNING
 > These HTTP requests are using `POST`!
@@ -76,5 +146,5 @@ The `pageid` query parameter in the API URL corresponds to `circularPageId` retu
 
 Not sure if this is useful: The response contains the number of items in the page (this can be calculated simply from the array in the "circular page" JSON (section 1.2 above)), but also seems to show references from this page to other pages ("collections") via `<page-summary>.configuration.subCollections[i].id` (corresponding to a `collectionId` in "**1.1.1 Response**").
 
-
-vim: set tabstop=2 shiftwidth=2 expandtab:
+<!-- }}- -->
+vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:

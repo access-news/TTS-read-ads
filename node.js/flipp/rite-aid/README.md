@@ -192,6 +192,9 @@ res = Object.keys(flyer_sections).map( key => flyer_sections[key]).map( section 
 
     text = text + '; ';
 
+    /* This could have been way easier with `replaceAll` used with a capturing group... Such as
+          replaceAll(/(\d)\//g, "$1 for ");
+    */
     pre_match = p.pre_price_text.match(/(\d)\//);
     if (pre_match) {
         text = text + pre_match[1] + ' for $' + p.price_text + (is_crv ? ' plus CRV or deposit where applicable; ' : '')
@@ -264,4 +267,3 @@ res = Object.keys(flyer_sections).map( key => flyer_sections[key]).map( section 
 
 <!-- }}- -->
 vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:
-
