@@ -116,7 +116,35 @@ Where `product_ids` are comma-delimited list of product IDs (without space) that
 
 <!-- }}- -->
 
-## Save script from Chrome console <!-- {{- -->
+<!-- }}- -->
+
+## Ad hoc solution for the time being...
+
+> **NOTE**
+> Igore all below. The JSON representation is unreliable (almost as if it is not used at all to render the online flyer..). For example, there is a `categories` key, but items are not really categorized by it (e.g., liquors listed in 'Food & Beverages').
+
+> TODO
+> Parse the website, like with Walgreens. Just as unreliable, but at least relevant info is there. (For example, there is a "Gift Cards" section, but the JSON representation never alludes to an item being a gift card, and it only caught my eye after looking at a Panera item with price range of $15 - $200.)
+
+1. Get the latest available flyer id (see `id` in the returned JSON)
+
+   ```
+   https://dam.flippenterprise.net/flyerkit/publications/riteaid?locale=en&access_token=0ebf9efc5d4c2b8bed77ca26a01261f4&show_storefronts=true&postal_code=95811&store_code=6520
+   ```
+
+2. Plug it into this link (where it says `<ID>`)
+
+   ```
+   https://dam.flippenterprise.net/flyerkit/publication/<ID>/products?display_type=all&valid_web_url=false&locale=en&access_token=0ebf9efc5d4c2b8bed77ca26a01261f4
+   ```
+
+3. Run one of the scripts below
+
+   ... and hope that one will work.
+
+   The first one stopped working right after the first week, because next week's JSON didn't have the `page` key (which was used to corral the products on their respective pages for sorting), missing a bunch of others, and some were renamed (e.g., `disclaimer` to `disclaimer_text`). The next one is based on the `categories` key; the downside is that it does not correspond to the headers of the flyer at all, and I think some of the products are even uncategorized, but we'll have to work with what we got.
+
+### The one using the `page` key <!-- {{- -->
 
 ```javascript
 /*
@@ -263,6 +291,47 @@ res = Object.keys(flyer_sections).map( key => flyer_sections[key]).map( section 
 ) /*.join('\n') */
 
 /* `price_text` always the same as `current_price`, but using the former, because it is an empty string when none, but the latter is `null`. */
+```
+
+<!-- }}- -->
+### The one using the `page` key <!-- {{- -->
+
+Again, don't use this; see NOTE above.
+
+```javascript
+/* SCRIPT BASED ON THE `categories` KEY */
+
+// To test the pattern later:
+//
+// + products:   [ i>0, null, "a_string" ]
+// + headers:    [ 0,   i>0,  "a_string" ]
+// + "Rite Aid": [ 0,   null, "Rite Aid" ]
+//
+// JSON.parse($0.textContent).map(i => [  i.categories.length, i.page_destination, i.name ] )
+
+flyer_sections =
+    JSON.
+        parse($0.textContent).
+        filter( item => item.categories.length).
+        reduce( (acc, item) => {
+            item.categories.forEach(
+                category => {
+                    acc[category] = acc[category] ? acc[category].concat(item) : [ item ]
+                }
+            );
+            return acc;
+        }, {});
+
+Object.keys(flyer_sections).map( category => {
+
+    products =
+        flyer_sections[category].
+        map( i => [ i.name, i.description, [ i.pre_price_text, i.price_text, i.post_price_text ].join(' '), i.disclaimer_text ].join('; ').
+            replaceAll(/\n+/g, ' ')
+        );
+
+    return [ category ].concat(products);
+});
 ```
 
 <!-- }}- -->
