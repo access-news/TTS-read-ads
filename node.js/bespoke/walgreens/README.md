@@ -86,7 +86,7 @@ let gogo = (reduced_item) => {
             replaceAll(/\$(\d+)(\d\d)/g, '$$$1.$2');
     } else if (ri.classList.contains('jq-circ-page-header')) {
         /* This class is usually for elements that contain section headers. */
-        ri['title'] = ri.newInnerText;
+        ri['title'] = ri.innerText;
     } else if (ri.nodeName === 'IMG') {
         /* Last week, there was ONE image that was basically a header, but it didn't have the `jq-circ-page-header`. It happened this week as well, so hoping that this is a recurring theme. */
         ri['title'] = ri.alt;
@@ -98,7 +98,58 @@ let gogo = (reduced_item) => {
     return ri;
 }
 
-rg = r.map(gogo).map( i => {if (i.proposed_text) { return i.proposed_text } else { return i; }});
+rg = r.map(gogo).
+    map( i => {
+        if (i.proposed_text) {
+            if        (i.proposed_text.match(/^DI:/)) {
+                return "";
+            } else if (i.proposed_text.match(/online exclusives/i)) {
+                return "";
+            } else if (i.proposed_text.match(/(coupon hub|start clipping|DOTW)/)) {
+                return "";
+            } else {
+                return i.proposed_text;
+            }
+        } else {
+            return i;
+        }
+    });
+
+/* For 2 weeks now, the organization of the ads were:
+   some initial ads without any header, followed by an
+   `<img>` tag stating "Deals of the Week". So adding
+   the first couple of products to it as well.
+
+                           return the index of the first
+                           item that has a title property
+                           VVVVVVVVVVVVVVVVVVVVVVVVVVV
+*/
+dealsOfTheWeekHeader = rg.splice(rg.findIndex( i => i.title), 1)[0];
+/*                                                            ^
+                                                    remove that one item
+*/
+dealsOfTheWeekHeader.title = dealsOfTheWeekHeader.title.replace('Header.', '').trim();
+rg.unshift(dealsOfTheWeekHeader);
+
+/* partition the page item flow array (rg)
+   into [ [title, ...items], [title, ...items], ...]
+*/
+cats =
+    rg.reduce(
+        (acc, item) => {
+            if (item.title) {
+                /*                       Add dot if none. */
+                acc.unshift( [item.title.replace(/\.?\s?$/, '.')] );
+            } else {
+                acc[0].push(  item  );
+            }
+            return acc;
+        },
+        []
+    ).
+    reverse();
+
+copy(cats.map( c => c.join(' ') ).join(' End of category.\n') + " End of flyer.")
 ```
 
 <!-- }}- -->
