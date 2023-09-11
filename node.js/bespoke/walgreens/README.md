@@ -29,42 +29,76 @@ items = Array.from(document.querySelectorAll('.card-container, .jq-circ-page-hea
 
 reduced_items = r = items.map( htmlDivElement => ['ariaLabel', 'innerText', 'outerText', 'alt', 'classList', 'nodeName'].reduce( (acc, curr) => { acc[curr] = htmlDivElement[curr]; return acc; }, {}))
 
+/*
 r2 = r.map( i => {
     if (i.ariaLabel) {
         i.ariaLabel = i.ariaLabel.replace(/product /, '');
         i.innerText = i.innerText.replace(i.ariaLabel, '').replaceAll(/\n+/g, '. ');
     }; return i; })
 
-/* r3 = r2.map( i => i.ariaLabel + '. ' + i.innerText ) */
+r3 = r2.map( i => i.ariaLabel + '. ' + i.innerText )
+*/
 
 let gogo = (reduced_item) => {
     ri = reduced_item;
 
     if (ri.classList.contains('card-container')) {
         ri.ariaLabel = ri.ariaLabel.replace(/product /, '');
-        ri.innerText = ri.innerText.replace(ri.ariaLabel, '');
-        ri['proposed_text'] = (ri.ariaLabel + '. ' + ri.innerText).
-            replaceAll(/\n+/g, '. ').
+        ri.newInnerText =
+            ri.innerText.
+            /* Some info is in `ariaLabel` and some is in `innerText`,
+               which is why their combination is needed (see below),
+               but sometimes the `ariaLabel` string is contained in
+               `innerText` in its entirety. `trim()` is needed because
+               some `ariaLabel`s have extra whitespace at the ends.
+            */
+            replace(ri.ariaLabel.trim(), '').
+            replaceAll(/\.+\s+/g, '; ');
+
+        ri['proposed_text'] = (ri.ariaLabel + '; ' + ri.newInnerText).
+            replaceAll(/\n+/g, '; ').
             replaceAll(/Shop now\.?/g, '').
             replaceAll(/Shop products/g, '').
             replaceAll(/[†Ω∞®‡»®*◊™]/g, '').
             replaceAll(/(\d)\//g, "$1 for ").
-            replaceAll(/ct\./g, 'count').
-            replaceAll(/\.\s+with/g, ' with').
-            replaceAll(/\.\s+when/g, ' when').
-            replaceAll(/BOGO/g, 'Buy one get one');
+            replaceAll(/\sct\./g, '-count').
+            replaceAll(/\sin\./g, '-inch').
+            replaceAll(/\soz\./g, '-ounce').
+            replaceAll(/\ml\./g, ' milliliter').
+            replaceAll(/BOGO/g, 'Buy one get one').
+            replaceAll(/(\d+)\s(\d+)/g, "$1.$2").
+            replaceAll(/[;.]\s+(or|with|when)/g, " $1").
+            replaceAll(/(online coupon)/ig, 'with $1').
+            /* check for consecutive semicolons (interspersed with whitespace)
+               rg.filter( e => typeof e.match === 'function').filter( e => e.match(/;\s+;/i))
+            */
+            replaceAll(/(;\s)+/g, '; ').
+            /* check for lines NOT ending with dots
+               rg.filter( e => typeof e.match === 'function').filter( e => !e.match(/\.$/))
+            */
+            replace(/;(\s?)+$/, '.').
+            replace(/([^.])$/, '$1.').
+            /* The decimal point is missing at many places (thus creating ridiculous prices),
+               this query should show that every number larger than 3 digits that represents
+               a price should be preceded by a dollar sign.
+               rg.filter( e => typeof e.match === 'function').filter( e => e.match(/\d{3,}/)).map(e => e.match(/(...\d{3,}...)/g));
+            */
+            replaceAll(/\$(\d+)(\d\d)/g, '$$$1.$2');
     } else if (ri.classList.contains('jq-circ-page-header')) {
-        ri['title'] = ri.innerText;
+        /* This class is usually for elements that contain section headers. */
+        ri['title'] = ri.newInnerText;
     } else if (ri.nodeName === 'IMG') {
+        /* Last week, there was ONE image that was basically a header, but it didn't have the `jq-circ-page-header`. It happened this week as well, so hoping that this is a recurring theme. */
         ri['title'] = ri.alt;
     } else {
+        /* Catch-all clause for items not handled above. */
         console.log(ri);
     }
 
     return ri;
 }
 
-r.map(gogo).map( i => {if (i.proposed_text) { return i.proposed_text } else { return i; }})
+rg = r.map(gogo).map( i => {if (i.proposed_text) { return i.proposed_text } else { return i; }});
 ```
 
 <!-- }}- -->
