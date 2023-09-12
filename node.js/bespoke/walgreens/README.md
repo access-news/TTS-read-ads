@@ -2,6 +2,9 @@
 
 The real solution (I think) lies in section "1. Walgreens API" below, but until I have time to properly explore it, here's an ad hoc one:
 
+> NOTE 2023-09-11
+> Probably still worth exploring the Walgreens API, but it might turn out to be a fiasco as the Flipp API in Rite Aid's case. Also, scraping the fully loaded HTML turned out to be surprisingly good.
+
 1. Go to the [Walgreens weekly ad page](https://www.walgreens.com/offers/offers.jsp/weeklyad?view=weeklyad).
 
 2. The page is not loaded all at once, so scroll down to the bottom.
