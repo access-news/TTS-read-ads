@@ -1,23 +1,166 @@
 ## 0. Interim solution
 
-> NOTE 2023-09-11 11-42
-> Igore all below. The JSON representation is unreliable (almost as if it is not used at all to render the online flyer..). For example, there is a `categories` key, but items are not really categorized by it (e.g., liquors listed in 'Food & Beverages').
+### Step 1. Scrape the weekly ad HTML to create a page template
 
-> TODO 2023-09-11 23-18 -> scrape + API + manual
->
-> 1. **Scrape the HTML and create a page structure**
->
->    There is a `<button>` element for each item, and items on a page are in a plain `<div>` (literally just a `<div>...</div>` block). Each `<button>` has an `item_id` attribute that corresponds to the `id` in the JSON API, so once the scaffolding is done for a page, continue with:
->
-> 2. (optional?) **Fill in the page scaffold gaps (if any) from the JSON API**
->
->    It seems that only minor info is missing from the HTML (such as sizes and units; e.g., Folgers and Dunkin coffee's don't list how many ounces, only the JSON API does), but there is probably a lot more that I missed. Plus, small things can be important too, so shouldn't slack.
->
-> 3. **Fill out the blanks manually**
->
-> There is a "Gift Cards" page where the title is only printed on the background image and not even the ARIA labels allude to the fact that the items on the page are in fact gift cards. The JSON API categories for them are bonkers, the titles (neither in the HTML nor in the JSON API) are helpful.
+On the [Rite Aid weekly ad](https://www.riteaid.com/weekly-ad) site, there is a `<button>` element for each item / special, and items on a page are in a plain `<div>` (literally just a `<div>...</div>` block). Each `<button>` has an `item_id` attribute that corresponds to the `id` in the JSON API, so once the scaffolding is done for a page.
 
-So, it is what it is, and will have to read through the generated text page by page and enter what's missing.
+The script below creates a 3-dimensional array (`[ /* page */ [ /* items */ [ /* item */ [..], [..] ]]]`) that needs to be copied from the browser tab / window to the one in the next step.
+
+```javascript
+/* ====================================== */
+/* STEP 1. SCRAPE HTML TO CREATE TEMPLATE */
+/* ====================================== */
+
+pages = Array.from(document.querySelectorAll('sfml-flyer-image > div'));
+
+/* There a pages that only have link children (i.e., `<a>`) and not
+   `<button>`s, so those will come up as empty arrays. They can be
+   ignored as these are the blue link collections to sections
+   ("Shop your faves!") and the "Back to the top" button.
+
+   Didn't see any point in saving the section names from one of the
+   link collections, because there is no way to programmatically
+   correlate with the items in any way. The JSON API has `categories`
+   keys that don't correspond to these names (and are useless), and
+   the titles are pure images, without any text markup referring to
+   them. So, if I have to do some parts by hand, I might as well do
+   all of them, and this way (hopefully) not miss any.
+*/
+items_per_page =
+    pages.
+        map( page => Array.from(page.querySelectorAll('button')) ).
+        filter( array => array.length )
+    ;
+
+/* NOTE Decided to only save the product ids, because the
+   `<button>` attribute texts seemingly are only a truncated
+   version of the JSON API. Fingers crossed.
+*/
+
+flyer_template =
+    items_per_page.map( page =>
+        page.map ( item => [ Number(item.dataset.productId) /*, item.ariaLabel */])
+    );
+
+// copy(flyer_template);
+```
+
+### Step 2. Fill the page template from the JSON API
+
+The script below is totatlly ad hoc; see rant below. Copy the script below into the dev console opened on the second link below (i.e., where all the items are listed). To get there:
+
+1. Get the latest available flyer id (see `id` in the returned JSON)
+
+   ```
+   https://dam.flippenterprise.net/flyerkit/publications/riteaid?locale=en&access_token=0ebf9efc5d4c2b8bed77ca26a01261f4&show_storefronts=true&postal_code=95811&store_code=6520
+   ```
+
+2. Plug it into this link (where it says `<ID>`)
+
+   ```
+   https://dam.flippenterprise.net/flyerkit/publication/<ID>/products?display_type=all&valid_web_url=false&locale=en&access_token=0ebf9efc5d4c2b8bed77ca26a01261f4
+   ```
+
+> RANT (in a Nick Offerman voice)
+> The Flipp JSON API is a mess: missing / renamed object properties each week, the naming of the properties matter little (e.g., disclaimer stuff is regularly in other, unrelated properties, `categories` is totally useless and does not even correspond to the rendered section names), string duplication (e.g., `name` is sometimes contained in `description` verbatim), typos galore (even in obviously template text that should be just copied around, but seemingly all this is typed by hand...), representational elements in the strings (e.g., '\n'), etc.
+>
+>
+> Not to mention that the Rite Aid site is grossly inaccessible (e.g., the headers of each section is only an image without any markup to indicate this), hence the need for Step 3.
+
+```javascript
+/* ===================================== */
+/* STEP 2. FILL TEMPLATE FROM JSON API   */
+/* ===================================== */
+
+// flyer_structure = f = <copy>
+
+const pick = (obj, needed_keys) => needed_keys.filter(key => key in obj).reduce((obj2, key) => (obj2[key] = obj[key], obj2), {});
+
+/* NOTE `disclaimer` vs `disclaimer_text`
+
+   The returned JSON seems to have a different structure from week to week
+   (e.g., no `page` property this week), and there was no `disclaimer` prop
+   yesterday - but there is one today. (Also, `disclaimer` seems to be the
+   the canonical one, but who knows.)
+
+   Bottom line: if fails to run, check the properties/keys/whatever.
+*/
+needed_keys = [
+    'name',
+    'description',
+    'pre_price_text', 'price_text', 'post_price_text',
+    'disclaimer', /* 'disclaimer_text', */
+    'sale_story'
+]
+
+filled =
+    f.map( (page, i) => {
+        newPage = page.map( item => {
+            tempItem = JSON.parse($0.textContent).find( i => i.id === item[0]);
+            newItem = pick(tempItem, needed_keys);
+        //  newItem['ariaLabel'] = item[1];
+            return newItem;
+        });
+        return [ `Page ${i+1}; PAGETITLEPLACEHOLDER` ].concat(newPage);
+    });
+
+filled_joined =
+    filled.map( page => {
+        joinedPage = page.map( item => {
+            joinedItem = needed_keys.reduce(
+                (acc, next) => {
+                    i = item[next] ? item[next] : '';
+                    switch (next) {
+                        case 'price_text':
+                            i = i ? '$' + i : i;
+                            break;
+                        case 'name':
+                            // `description` sometimes starts with the same string that is in `name`. To check:
+                            // filled_joined.reduce( (acc, page) => { return acc.concat(page.filter( item => item.description && item.name && item.description.match(new RegExp(item.name))) ) }, [])
+                            i = (item.description && item.description.match(new RegExp(i))) ? '' : i;
+                            // NO BREAK!
+                        case 'description':
+                            i = i.replaceAll(/\n+/g, ' ');
+                            break;
+                        default:
+                            i;
+                    }
+                    return acc + '; ' + i;
+                },
+                "");
+
+            item['proposed_text'] =
+                joinedItem.
+                    replace(/^(\s*;\s*)+/, '').
+                    replaceAll(/\n+/g, '; ').
+                    replaceAll(/oz\./g, 'ounce').
+                    replaceAll(/ct\./g, 'count').
+                    replaceAll(/[Ee][Aa]\./g, 'each').
+                    replaceAll(/¢/g, '').
+                    replaceAll(/ml\./g, 'milliliters').
+                    replaceAll(/(\d+)\/(\s?)*;/g, '$1 for ').
+                    replaceAll(/((\*?)*[Ll]imit\s+\d)/g, '; $1 ;').
+                    replaceAll(/(bonuscash) buy/ig, '$1 if you buy').
+                    replaceAll(/(;\s*)+[Oo][Rr]/g, ' or').
+                    replaceAll(/clip coupon now\!?/ig, 'with coupon').
+                    replaceAll(/(;\s*)+with/ig, ' with').
+                    replaceAll(/\*+/g, '').
+                    replaceAll(/(riteaid.com\/coupons)/ig, '; see $1 ;').
+                    replaceAll(/(;\s*)*sunday\s+paper/ig, ' with Sunday paper').
+                    replaceAll(/\.;/g, '; ').
+                    replace(/(;\s*)*$/, '')
+
+            return item;
+        });
+        return joinedPage;
+    });
+
+j = filled_joined.map( page => page.map( item => { return typeof item.proposed_text === 'string' ? item.proposed_text : item }).join('. ')).join('. End of page.\n') + '. End of flyer.';
+```
+
+### Step 3. Fill out the blanks + correct one-off errors
+
+There is `PAGETITLEPLACEHOLDER` at the moment (and a lots of typos, probably).
 
 ---
 
