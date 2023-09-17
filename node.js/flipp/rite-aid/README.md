@@ -156,7 +156,8 @@ filled_joined =
                     replaceAll(/(riteaid.com\/coupons)/ig, '; see $1 ;').
                     replaceAll(/(;\s*)*sunday\s+paper/ig, ' with Sunday paper').
                     replaceAll(/\.;/g, '; ').
-                    replace(/(;\s*)*$/, '')
+                    replace(/(;\s*)*$/, '').
+                    replaceAll(/OFF/g, 'off');
 
             return item;
         });
