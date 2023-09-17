@@ -1,5 +1,9 @@
 ## 0. Interim solution
 
+### Step 0. Reload the page and scroll down manually
+
+This was the only way the script in Step 1. below worked this week...
+
 ### Step 1. Scrape the weekly ad HTML to create a page template
 
 On the [Rite Aid weekly ad](https://www.riteaid.com/weekly-ad) site, there is a `<button>` element for each item / special, and items on a page are in a plain `<div>` (literally just a `<div>...</div>` block). Each `<button>` has an `item_id` attribute that corresponds to the `id` in the JSON API, so once the scaffolding is done for a page.
@@ -93,10 +97,14 @@ needed_keys = [
     'sale_story'
 ]
 
+jsonItems = JSON.parse($0.textContent);
+
+//toLocaleString('default', { month: 'long' })
+
 filled =
     f.map( (page, i) => {
         newPage = page.map( item => {
-            tempItem = JSON.parse($0.textContent).find( i => i.id === item[0]);
+            tempItem = jsonItems.find( i => i.id === item[0]);
             newItem = pick(tempItem, needed_keys);
         //  newItem['ariaLabel'] = item[1];
             return newItem;
@@ -155,7 +163,23 @@ filled_joined =
         return joinedPage;
     });
 
-j = filled_joined.map( page => page.map( item => { return typeof item.proposed_text === 'string' ? item.proposed_text : item }).join('. ')).join('. End of page.\n') + '. End of flyer.';
+// Appending the "T..." string is needed otherwise JS will subtract 1
+// from the day for reasons only known to god.
+from = new Date(JSON.parse($0.textContent)[0].valid_from + "T00:00:00");
+to   = new Date(JSON.parse($0.textContent)[0].valid_to   + "T00:00:00");
+
+fromMonthName = from.toLocaleDateString('default', { month: 'long' });
+toMonthName   =   to.toLocaleDateString('default', { month: 'long' });
+
+fromDayName = from.toLocaleDateString('default', { weekday: 'long' });
+toDayName   =   to.toLocaleDateString('default', { weekday: 'long' });
+
+fromDateNumber = from.getDate();
+toDateNumber   =   to.getDate();
+
+header = `Rite Aid. Specials are valid from ${fromMonthName} ${fromDateNumber}, ${fromDayName}, to ${toMonthName} ${toDateNumber}, ${toDayName}.`
+
+j = header + "\n" + filled_joined.map( page => page.map( item => { return typeof item.proposed_text === 'string' ? item.proposed_text : item }).join('. ')).join('. End of page.\n')
 ```
 
 ### Step 3. Fill out the blanks + correct one-off errors
