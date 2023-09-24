@@ -10,6 +10,9 @@ On the [Rite Aid weekly ad](https://www.riteaid.com/weekly-ad) site, there is a 
 
 The script below creates a 3-dimensional array (`[ /* page */ [ /* items */ [ /* item */ [..], [..] ]]]`) that needs to be copied from the browser tab / window to the one in the next step.
 
+> NOTE
+> This doesn't work out-of-the-box for some reason, only after clicking "inspect" on an element. Not sure why.
+
 ```javascript
 /* ====================================== */
 /* STEP 1. SCRAPE HTML TO CREATE TEMPLATE */
